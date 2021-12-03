@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -83,9 +84,297 @@ func ResourceFleet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"instance_requirements": {
+										Type:          schema.TypeMap,
+										Optional:      true,
+										ConflictsWith: []string{"instance_type"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"accelerator_count": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+													Optional: true,
+												},
+												"accelerator_manufacturers": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															ec2.AcceleratorManufacturerNvidia,
+															ec2.AcceleratorManufacturerAmd,
+															ec2.AcceleratorManufacturerAmazonWebServices,
+															ec2.AcceleratorManufacturerXilinx,
+														}, false),
+													},
+												},
+												"accelerator_names": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															ec2.AcceleratorNameA100,
+															ec2.AcceleratorNameV100,
+															ec2.AcceleratorNameK80,
+															ec2.AcceleratorNameT4,
+															ec2.AcceleratorNameM60,
+															ec2.AcceleratorNameRadeonProV520,
+															ec2.AcceleratorNameVu9p,
+														}, false),
+													},
+												},
+												"accelerator_total_memory_mib": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+													Optional: true,
+												},
+												"accelerator_types": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															ec2.AcceleratorTypeGpu,
+															ec2.AcceleratorTypeFpga,
+															ec2.AcceleratorTypeInference,
+														}, false),
+													},
+												},
+												"bare_metal": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Default:  ec2.BareMetalExcluded,
+													ValidateFunc: validation.StringInSlice([]string{
+														ec2.BareMetalIncluded,
+														ec2.BareMetalRequired,
+														ec2.BareMetalExcluded,
+													}, false),
+												},
+												"baseline_ebs_bandwidth_mbps": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+													Optional: true,
+												},
+												"burstable_performance": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Default:  ec2.BurstablePerformanceExcluded,
+													ValidateFunc: validation.StringInSlice([]string{
+														ec2.BurstablePerformanceIncluded,
+														ec2.BurstablePerformanceRequired,
+														ec2.BurstablePerformanceExcluded,
+													}, false),
+												},
+												"cpu_manufacturers": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															ec2.CpuManufacturerIntel,
+															ec2.CpuManufacturerAmd,
+															ec2.CpuManufacturerAmazonWebServices,
+														}, false),
+													},
+												},
+												"excluded_instance_types": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 400,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 30),
+															validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9\.\*]+`), "must be alphanumeric"),
+														),
+													},
+												},
+												"instance_generations": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															ec2.InstanceGenerationCurrent,
+															ec2.InstanceGenerationPrevious,
+														}, false),
+													},
+												},
+												"local_storage": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Default:  ec2.LocalStorageIncluded,
+													ValidateFunc: validation.StringInSlice([]string{
+														ec2.LocalStorageIncluded,
+														ec2.LocalStorageRequired,
+														ec2.LocalStorageExcluded,
+													}, false),
+												},
+												"local_storage_types": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															ec2.LocalStorageTypeHdd,
+															ec2.LocalStorageTypeSsd,
+														}, false),
+													},
+												},
+												"memory_gib_per_v_cpu": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ValidateFunc: validation.FloatAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ValidateFunc: validation.FloatAtLeast(0),
+															},
+														},
+													},
+													Optional: true,
+												},
+												"memory_mib": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+													Required: true,
+												},
+												"network_interface_count": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+													Optional: true,
+												},
+												"on_demand_max_price_percentage_over_lowest_price": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Default:      20,
+													ValidateFunc: validation.IntAtLeast(0),
+												},
+												"require_hibernate_support": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"spot_max_price_percentage_over_lowest_price": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Default:      100,
+													ValidateFunc: validation.IntAtLeast(0),
+												},
+												"total_local_storage_gb": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ValidateFunc: validation.FloatAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ValidateFunc: validation.FloatAtLeast(0),
+															},
+														},
+													},
+													Optional: true,
+												},
+												"v_cpu_count": {
+													Type: schema.TypeMap,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+													Required: true,
+												},
+											},
+										},
+									},
 									"instance_type": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"instance_requirements"},
 									},
 									"max_price": {
 										Type:     schema.TypeString,
